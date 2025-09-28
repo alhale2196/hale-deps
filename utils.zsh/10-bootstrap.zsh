@@ -161,9 +161,6 @@ Usage: %B${functrace[1]%:*}%b <option> [<options>]
   }
 
   setup_host
-  log_info "1"
   setup_target ${target}
-  log_info "2"
   setup_build_parameters ${target} ${config}
-  log_info "3"
 }

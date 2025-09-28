@@ -1,5 +1,5 @@
-name: Build Windows Dependencies
-description: Builds Windows dependencies for hale-deps with specified architecture, type, and build config
+name: Build Dependencies
+description: Builds dependencies for hale-deps with specified architecture, type, and build config
 inputs:
   target:
     description: Build target for dependencies
@@ -37,11 +37,13 @@ runs:
             ;;
         esac
 
+        deps_hash=$(echo "${deps_hash}\n$(cmake --version)" | sha256sum | cut -d " " -f 1)
+
         echo "hash=${deps_hash:0:9}" >> $GITHUB_OUTPUT
 
     - name: Restore Dependencies from Cache
       id: deps-cache
-      uses: actions/cache/restore@v3
+      uses: actions/cache/restore@v4
       with:
         path: |
           ${{ inputs.workingDirectory }}/*_build_temp/*
@@ -83,8 +85,8 @@ runs:
 
         ./Build-Dependencies.ps1 @Params
 
-    - name: Save Windows Dependencies to Cache
-      uses: actions/cache/save@v3
+    - name: Save Dependencies to Cache
+      uses: actions/cache/save@v4
       if: github.event_name == 'schedule' || (github.event_name == 'push' && steps.deps-cache.outputs.cache-hit != 'true')
       with:
         path: |

@@ -2,9 +2,9 @@ autoload -Uz log_debug log_error log_info log_status log_output
 
 ## Dependency Information
 local name='freetype'
-local version='2.13.0'
-local url='https://downloads.sourceforge.net/project/freetype/freetype2/2.13.0/freetype-2.13.0.tar.xz'
-local hash="${0:a:h}/checksums/freetype-2.13.0.tar.xz.sha256"
+local version='2.13.3'
+local url='https://downloads.sourceforge.net/project/freetype/freetype2/2.13.3/freetype-2.13.3.tar.xz'
+local hash="${0:a:h}/checksums/freetype-2.13.3.tar.xz.sha256"
 
 local -i shared_libs=1
 
@@ -88,6 +88,8 @@ install() {
   log_info "Install (%F{3}${target}%f)"
 
   cd ${dir}/build_${arch}
+
+  if [[ ${arch} == universal ]] sed -i '' -E -e 's/build_(x86_64|arm64)/build_universal/g' Makefile
 
   PATH="${(j.:.)cc_path}" progress make install
 }

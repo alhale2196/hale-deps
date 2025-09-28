@@ -20,9 +20,9 @@ function Invoke-DevShell {
         [Parameter(Mandatory)]
         [string] $BuildCommand,
         [Parameter(Mandatory)]
-        [ValidateSet('x86', 'x64')]
+        [ValidateSet('arm64', 'x64', 'x86')]
         [string] $Target,
-        [string] $HostArchitecture = ( 'x86', 'x64' )[ [System.Environment]::Is64BitOperatingSystem ]
+        [string] $HostArchitecture = ([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)
     )
 
     if ( ! ( Test-Path function:Log-Information ) ) {
@@ -39,12 +39,12 @@ function Invoke-DevShell {
 @"
 `$ErrorActionPreference = 'Stop'
 
-Import-Module '$($VisualStudioData.InstallLocation)/Common7/Tools/Microsoft.VisualStudio.DevShell.dll'
+Import-Module '$($VisualStudioData.InstallationPath)/Common7/Tools/Microsoft.VisualStudio.DevShell.dll'
 
 `$_Params = @{
     StartInPath = '${BasePath}'
-    DevCmdArguments = '-arch=${Target} -host_arch=${HostArchitecture}'
-    VsInstanceId = '$(($VisualStudioData.InstanceId -split ':')[2])'
+    DevCmdArguments = '-arch=${Target} -host_arch=$($HostArchitecture.ToLower())'
+    VsInstanceId = '$($VisualStudioData.InstanceId)'
 }
 
 Enter-VsDevShell @_Params
@@ -62,11 +62,7 @@ if ( ! ( `$? ) ) {
     $_EAP = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
 
-    if ($PSVersionTable.PSEdition -eq "Core") {
-        $PowerShellCommand = "pwsh"
-    } else {
-        $PowerShellCommand = "powershell"
-    }
+    $PowerShellCommand = "pwsh"
 
     & $PowerShellCommand -Command $DevShellCommand
 

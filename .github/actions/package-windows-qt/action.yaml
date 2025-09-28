@@ -1,5 +1,5 @@
 name: Package Windows Qt
-description: Packages Windows Qt for obs-deps with specified architecture
+description: Packages Windows Qt for hale-deps with specified architecture
 inputs:
   releaseArtifact:
     description: Name of the optimized Windows artifact to use for packaging
@@ -17,12 +17,12 @@ runs:
   using: composite
   steps:
     - name: Download Windows RelWithDebInfo artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: ${{ inputs.releaseArtifact }}
 
     - name: Download Windows Debug artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: ${{ inputs.debugArtifact }}
 
@@ -111,7 +111,9 @@ runs:
           'qtpaths.pdb'
           'qvkgen.pdb'
           'rcc.pdb'
+          'syncqt.pdb'
           'tracegen.pdb'
+          'tracepointgen.pdb'
           'uic.pdb'
         )
 
@@ -126,13 +128,13 @@ runs:
         Pop-Location
 
     - name: Publish Combined Qt Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.outputName }}
         path: ${{ github.workspace }}/${{ steps.combine.outputs.artifactFile }}
 
     - name: Publish Release PDBs Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.pdbOutputName }}
         path: ${{ github.workspace }}/${{ steps.combine.outputs.pdbFile }}

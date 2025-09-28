@@ -3,14 +3,31 @@ function Setup-Target {
         . $PSScriptRoot/Logger.ps1
     }
 
-    $Target64Bit = ( $script:Target -eq 'x64' )
+    $TargetData = @{
+        x64 = @{
+            Arch = 'x64'
+            UnixArch = 'x86_64'
+            CmakeArch = 'x64'
+            Bitness = '64'
+        }
+        x86 = @{
+            Arch = 'x86'
+            UnixArch = 'x86'
+            CmakeArch = 'Win32'
+            Bitness = '32'
+        }
+        arm64 = @{
+            Arch = 'arm64'
+            UnixArch = 'aarch64'
+            CmakeArch = 'ARM64'
+            Bitness = '64'
+        }
+    }
 
-    $script:ConfigData = @{
-        Arch = ('x86', 'x64')[$Target64Bit]
-        UnixArch = ('x86', 'x86_64')[$Target64Bit]
-        CmakeArch = ('Win32', 'x64')[$Target64Bit]
-        Bitness = ('32', '64')[$Target64Bit]
-        OutputPath = "${script:ProjectRoot}\windows\hale-${script:PackageName}-${script:Target}"
+    $script:ConfigData = $TargetData[$script:Target]
+
+    $script:ConfigData += @{
+        OutputPath = "${script:ProjectRoot}\windows\obs-${script:PackageName}-${script:Target}"
     }
 
     Log-Debug "
@@ -29,19 +46,50 @@ function Setup-BuildParameters {
         . $PSScriptRoot/Logger.ps1
     }
 
-    $NumProcessors = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
-
-    if ( $NumProcessors -gt 1 ) {
-        $env:UseMultiToolTask = $true
-        $env:EnforceProcessCountAcrossBuilds = $true
-    }
-
     $VisualStudioData = Find-VisualStudio
 
     $VisualStudioId = "Visual Studio {0} {1}" -f @(
-        ([System.Version] $VisualStudioData.Version).Major
-        ( $VisualStudioData.Name -split ' ')[3]
+        $VisualStudioData.InstallationVersion.Major
+        ($VisualStudioData.DisplayName -split ' ')[-1]
     )
+
+    $script:CFlags = @()
+    $script:CxxFlags = @()
+
+    switch ( ${script:Configuration} ) {
+        Debug {
+            $script:CFlags += @(
+                '-Ob0 -Od -RTC1'
+            )
+            $script:CxxFlags += @(
+                '-Ob0 -Od -RTC1'
+            )
+        }
+        RelWithDebInfo {
+            $script:CFlags += @(
+                '-O2 -Ob1 -DNDEBUG'
+            )
+            $script:CxxFlags += @(
+                '-O2 -Ob1 -DNDEBUG'
+            )
+        }
+        Release {
+            $script:CFlags += @(
+                '-O2 -Ob2 -DNDEBUG'
+            )
+            $script:CxxFlags += @(
+                '-O2 -Ob2 -DNDEBUG'
+            )
+        }
+        MinSizeRel {
+            $script:CFlags += @(
+                '-O1 -Ob1 -DNDEBUG'
+            )
+            $script:CxxFlags += @(
+                '-O1 -Ob1 -DNDEBUG'
+            )
+        }
+    }
 
     $script:CmakeOptions = @(
         '-A', $script:ConfigData.CmakeArch
@@ -53,6 +101,14 @@ function Setup-BuildParameters {
         '--no-warn-unused-cli'
     )
 
+    $script:CMakePostfix = @(
+        '--'
+        '/consoleLoggerParameters:Summary'
+        '/noLogo'
+        '/p:UseMultiToolTask=true'
+        '/p:EnforceProcessCountAcrossBuilds=true'
+    )
+
     if ( $script:Quiet ) {
         $script:CmakeOptions += @(
             '-Wno-deprecated', '-Wno-dev', '--log-level=ERROR'
@@ -61,6 +117,8 @@ function Setup-BuildParameters {
 
     Log-Debug @"
 
+C flags         : $($script:CFlags)
+C++ flags       : $($script:CxxFlags)
 CMake options   : $($script:CmakeOptions)
 Multi-process   : ${NumProcessors}
 "@
@@ -77,29 +135,15 @@ function Find-VisualStudio {
             Find-VisualStudio
     #>
 
-    $VisualStudioData = Get-CimInstance MSFT_VSInstance
-
-    # Prefer VS versions in this order:
-    # 1. VS2022 Release (stable)
-    # 2. VS2022 Preview
-    # 3. VS2019 Release
-    [string[]]$SupportedVSVersions =
-        "VisualStudio.17.Release",
-        "VisualStudio.17.Preview",
-        "VisualStudio.16.Release"
-    $NumSupportedVSVersions = $SupportedVSVersions.length
-
-    if ( $VisualStudioData.GetType() -eq [object[]] ) {
-        for ( $i = 0; $i -lt $NumSupportedVSVersions; $i++ ) {
-            $VisualStudioDataTemp = ($VisualStudioData | Where-Object {$_.ChannelId -eq $SupportedVSVersions[$i]} | Sort-Object -Property Version)[0]
-            if ( $VisualStudioDataTemp ) {
-                break;
-            }
+    if ( $env:CI -eq $null ) {
+        if ( ( Get-InstalledModule VSSetup ) -eq $null ) {
+            Install-Module VSSetup -Scope CurrentUser
         }
-        $VisualStudioData = $VisualStudioDataTemp
     }
 
-    if ( ! ( $VisualStudioData ) -or ( $VisualStudioData.Version -lt 16 ) ) {
+    $VisualStudioData = Get-VSSetupInstance -Prerelease:$($script:VSPrerelease) | Select-VSSetupInstance -Version '[16.0,18.0)' -Latest
+
+    if ( $VisualStudioData -eq $null ) {
         $ErrorMessage = @(
             "A Visual Studio installation (2019 or newer) is required for this build script.",
             "The Visual Studio Community edition is available for free at https://visualstudio.microsoft.com/vs/community/.",
