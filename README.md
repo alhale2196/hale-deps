@@ -2,7 +2,6 @@
 
 This repository is a collection of build scripts to build Hale Terminal dependencies for macOS and Windows.
 
-
 ## WARNING
 
 When trying to use the FFmpeg build scripts within a Windows Subsystem for Linux (WSL) environment, please ensure that the `hale-deps` git checkout was done within the WSL environment.
