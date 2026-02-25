@@ -20,7 +20,7 @@ function Check-GitUser {
     $GitUserEmail = git config --get user.email
     if ( [string]::IsNullOrEmpty($GitUserEmail) ) {
         Log-Information "Set git user.email..."
-        Invoke-External git config user.email "commits@obsproject.com"
+        Invoke-External git config user.email "alhale2196@gmail.com"
     } else {
         Log-Information "Git user.email already set: ${GitUserEmail}"
     }
@@ -28,7 +28,7 @@ function Check-GitUser {
     $GitUserName = git config --get user.name
     if ( [string]::IsNullOrEmpty($GitUserName) ) {
         Log-Information "Set git user.name..."
-        Invoke-External git config user.name "OBS Project"
+        Invoke-External git config user.name "alhale2196"
     } else {
         Log-Information "Git user.name already set: ${GitUserName}"
     }

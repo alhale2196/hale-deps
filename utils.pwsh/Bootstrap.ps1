@@ -15,7 +15,7 @@ function Bootstrap {
     if ( $script:Target -eq '' ) { $script:Target = $script:HostArchitecture }
 
     Write-Host '---------------------------------------------------------------------------------------------------'
-    Write-Host -NoNewLine '[HALE-DEPS] - configuration '
+    Write-Host -NoNewLine '[hale-deps] - configuration '
     Write-Host -NoNewLine -ForegroundColor Green $script:Configuration
     Write-Host -NoNewLine ', target '
     Write-Host -NoNewLine -ForegroundColor Green $script:Target

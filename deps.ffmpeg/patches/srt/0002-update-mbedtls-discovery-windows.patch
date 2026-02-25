@@ -47,7 +47,7 @@
 -#  LIBMBEDTLS_INCLUDE_DIRS
 -#  LIBMBEDTLS_LIBRARIES
 -#
--# For use in OBS:
+-# For use in HALE:
 -#
 -#  MBEDTLS_INCLUDE_DIR
 -

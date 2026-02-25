@@ -11,10 +11,10 @@ setup_target() {
     [cmake_arch]=x86_64
     [target_os]=${1%%-*}
     [arch]=${1##*-}
-    [output_dir]="${project_root}/${1}/hale-${PACKAGE_NAME}-${1##*-}"
+    [output_dir]="${project_root}/${1}/obs-${PACKAGE_NAME}-${1##*-}"
   )
 
-  mkdir -p "${project_root}/${1}/hale-${PACKAGE_NAME}-${1##*-}"
+  mkdir -p "${project_root}/${1}/obs-${PACKAGE_NAME}-${1##*-}"
 
   case ${1} {
     macos-x86_64)

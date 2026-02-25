@@ -687,7 +687,7 @@ jobs:
           draft: false
           prerelease: false
           tag_name: ${{ steps.metadata.outputs.version }}
-          name: OBS Deps Build ${{ steps.metadata.outputs.version }}
+          name: HALE Deps Build ${{ steps.metadata.outputs.version }}
           body_path: ${{ github.workspace }}/CHECKSUMS.txt
           files: |
             ${{ github.workspace }}/windows-*-x64*.zip
